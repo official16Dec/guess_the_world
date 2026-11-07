@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:guess_the_world/utils/widgets/game_dialog.dart';
 
 void main() => runApp(const GuessTheWorldApp());
 
@@ -20,7 +21,7 @@ class GuessTheWorldApp extends StatelessWidget {
           seedColor: const Color(0xFF426B5A),
           brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF5F7F2),
+        scaffoldBackgroundColor: const Color(0xFF121A17),
         fontFamily: 'Roboto',
       ),
 
@@ -209,6 +210,7 @@ class _GamePageState extends State<GamePage> {
       _answered = true;
       _isCorrect = correct;
       if (correct) _score++;
+      showGameOverDialog(context);
     });
   }
 
@@ -314,7 +316,13 @@ class _GamePageState extends State<GamePage> {
                             Difficulty.easy => 'Easy',
                             Difficulty.medium => 'Medium',
                             Difficulty.hard => 'Hard',
-                          }),
+                          },
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFEAF0E8),
+                            ),
+                          ),
                         ),
                       )
                           .toList(),
@@ -331,8 +339,8 @@ class _GamePageState extends State<GamePage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                /*ClipRRect(
+                /*const SizedBox(height: 6),
+                ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: LinearProgressIndicator(
                     value: progress,
@@ -361,7 +369,7 @@ class _GamePageState extends State<GamePage> {
                         aspectRatio: 4 / 3,
                         child: Image.asset(
                           _current.imageAsset,
-                          fit: BoxFit.cover,
+                          fit: BoxFit.fitWidth,
                           errorBuilder: (context, error, stackTrace) {
                             return const Center(
                               child: Icon(Icons.image_not_supported)
@@ -370,7 +378,7 @@ class _GamePageState extends State<GamePage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
+                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -389,7 +397,11 @@ class _GamePageState extends State<GamePage> {
                               style: Theme.of(context)
                                   .textTheme
                                   .headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w800, fontSize: 16),
+                                  ?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 16,
+                                color: Colors.blueGrey
+                              ),
                             ),
                             const SizedBox(height: 5),
                             Text(
@@ -416,7 +428,7 @@ class _GamePageState extends State<GamePage> {
                       background = const Color(0xFFDDF3E3);
                       foreground = const Color(0xFF175D35);
                     } else if (_answered && _isCorrect == false && !isAnswer) {
-                      background = Colors.white;
+                      background = Color(0x2427372E);
                     }
 
                     return Padding(
@@ -446,13 +458,15 @@ class _GamePageState extends State<GamePage> {
                                 height: 30,
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFEAF0E8),
+                                  color: (_answered && isAnswer)
+                                      ? Color(0xFF426B5A)
+                                      : Color(0xFFEAF0E8),
                                   borderRadius: BorderRadius.circular(9),
                                 ),
                                 child: Text(
                                   String.fromCharCode(65 + entry.key),
-                                  style: const TextStyle(
-                                    color: Color(0xFF426B5A),
+                                  style: TextStyle(
+                                    color: (_answered && isAnswer) ? Color(0xFFEAF0E8) : Color(0xFF426B5A),
                                     fontSize: 14,
                                   ),
                                 ),
@@ -461,14 +475,17 @@ class _GamePageState extends State<GamePage> {
                               Expanded(
                                 child: Text(
                                   option,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
+                                    color: (_answered && isAnswer)
+                                        ? Color(0xFF426B5A)
+                                        : Color(0xFFEAF0E8),
                                   ),
                                 ),
                               ),
-                              if (_answered && isAnswer)
-                                const Icon(Icons.check_circle_rounded),
+                              if (_answered && isAnswer && _isCorrect == true)
+                                const Icon(Icons.check_circle_rounded, color: Color(0xFF426B5A),),
                             ],
                           ),
                         ),
@@ -530,6 +547,7 @@ class _GamePageState extends State<GamePage> {
                           color: _isCorrect == true
                               ? const Color(0xFF217346)
                               : const Color(0xFFB3442F),
+                          size: 20,
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -537,17 +555,18 @@ class _GamePageState extends State<GamePage> {
                             _isCorrect == true
                                 ? 'Correct! Great job.'
                                 : 'Not quite. The answer is ${_current.answer}.',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
+                              color: _isCorrect == true ? Color(0xFF217346) : Color(0xFFB3442F)
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 18),
                   SizedBox(
-                    height: 54,
+                    height: 48,
                     child: FilledButton.icon(
                       onPressed: _nextQuestion,
                       icon: Icon(
@@ -563,7 +582,7 @@ class _GamePageState extends State<GamePage> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 TextButton.icon(
                   onPressed: _startGame,
                   icon: const Icon(Icons.refresh_rounded),
@@ -574,6 +593,33 @@ class _GamePageState extends State<GamePage> {
           ),
         ),
       ),
+    );
+  }
+
+  void showGameOverDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return GameDialog(
+          icon: _isCorrect == true ? Icons.emoji_events_rounded : Icons.error_outline,
+          title: _isCorrect == true ? 'Correct Answer!' : 'Wrong Answer!',
+          message: _isCorrect == true ? 'Great effort! You answered correctly?' : 'Sad! Your answer is incorrect.',
+          primaryButtonText: 'Next Question',
+          secondaryButtonText: 'Exit Game',
+          onPrimaryPressed: () {
+            Navigator.pop(dialogContext);
+
+            // Restart your game here.
+          },
+          onSecondaryPressed: () {
+            Navigator.pop(dialogContext);
+
+            // Exit or navigate to the home screen.
+          },
+          isSuccess: _isCorrect == true,
+        );
+      },
     );
   }
 }
